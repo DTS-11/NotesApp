@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
 
 
 const NotePage = () => {
@@ -13,9 +12,21 @@ const NotePage = () => {
     }, [noteId])
 
     let getNote = async () => {
+        if (noteId === 'new') return
+
         let response = await fetch(`http://localhost:8000/api/notes/${noteId}`)
         let data = await response.json()
         setNotes(data)
+    }
+
+    let createNote = async () => {
+        fetch(`http://localhost:8000/api/notes/create/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(note)
+        })
     }
 
     let updateNote = async () => {
@@ -39,7 +50,13 @@ const NotePage = () => {
     }
 
     let handleSubmit = () => {
-        updateNote()
+        if (noteId !== 'new' && note.body === '') {
+            deleteNote()
+        } else if (noteId !== 'new') {
+            updateNote()
+        } else if (noteId == 'new' && note.body !== null) {
+            createNote()
+        }
         navigate('/')
     }
 
@@ -48,9 +65,14 @@ const NotePage = () => {
         <div className="note">
             <div className="note-header">
                 <h3 onClick={handleSubmit}>⬅</h3>
-                <button onClick={deleteNote}>Delete</button>
+                {noteId !== 'new' ? (
+                    <button onClick={deleteNote}>Delete</button>
+                ): (
+                    <button onClick={handleSubmit}>Save</button>
+                )}
+                
             </div>
-            <textarea onChange={(e) => {setNotes({...note, 'body': e.target.value})}} defaultValue={note?.body}></textarea>
+            <textarea onChange={(e) => { setNotes({...note, 'body':e.target.value}) }} value={note?.body}></textarea>
         </div>
     );
 }
